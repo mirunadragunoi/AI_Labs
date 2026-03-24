@@ -1,102 +1,83 @@
 import numpy as np
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import confusion_matrix
 
 # incarc datele mnist
 train_images = np.loadtxt('data/train_images.txt')
-train_labels = np.loadtxt('data/train_labels.txt').astype(int)
+train_labels = np.loadtxt('data/train_labels.txt').astype('int')
 test_images = np.loadtxt('data/test_images.txt')
-test_labels = np.loadtxt('data/test_labels.txt').astype(int)
-
-# test prima imagine
-imagine = train_images[0, :]
-imagine = np.reshape(imagine, (28, 28))
-plt.imshow(imagine.astype(np.uint8), cmap='gray')
-plt.show()
+test_labels = np.loadtxt('data/test_labels.txt').astype('int')
 
 
-# ex 2 -->> calculati captele a num_bins intervale
-# values_to_bins -->> primeste matrice de dimensiune (n_samples, n_features) si captele intervalelor
-# pentru fiecare exemplu si fiecare atribut calculeaza indexul intervalului corespunzatori
-# folositi fct definita pt a discretica multimea de antrenare si cea de testare
+# ex 2 --->> capetele a num_bins invervale
+# values_to_bins -->> primeste matrice (n_samples, n_features)
+# plus capetele intervalelor
+# pt fiecare exemplu + atribut calculeaza indexul intervalului
 
-def values_to_bins(data, num_bins):
-    # cream captele intervalelor -->> num_bins valori intre 0 si 255
-    bins = np.linspace(start=0, stop=255, num=num_bins)
+def values_to_bins(date, num_bins):
+    # capetele intervalelor, avem pixeli de la 0 la 255
+    bins = np.linspace(start=0, stop=256, num=num_bins + 1)
 
-    # np.digitize -->> pt fiecare valoare gaseste in ce interval cade
-    data_binned = np.digitize(data, bins)
-    return data_binned
+    # calculam pt fiecare valoare in ce interval cade
+    date_binned = np.digitize(date, bins) - 1
+
+    return date_binned
 
 
-# ex 3 -->> acuratetea pe multimea de testare a clasificatorului Multinomial Naive Bayes, impartind intervalul
-# pixelilor in 4 subintervale
+# ex 3 -->> acuratetea pe multimea de testare cu 4 subintervale
 
-# step 1 --->> discretizam train si test cu values_to_bins
-num_bins = 4
+# pas 1 --->> discretizam
+num_bins = 5
 train_binned = values_to_bins(train_images, num_bins)
 test_binned = values_to_bins(test_images, num_bins)
 
-# step 2 --->> cream si antrenam modelul
+# pas 2 -->> trebuie sa cream si antrenam modelul
 model = MultinomialNB()
 model.fit(train_binned, train_labels)
 
-# step 3 --->> acuratete
+# pas 3 -->> acuratetea
 acuratete = model.score(test_binned, test_labels)
-print("Acuratete: %s " % acuratete)
+print(f"acuratete: {acuratete}")
 
-# scurta verificare cu num_binds = 5 unde tre sa ne dea 83,6%
-train_binned_5 = values_to_bins(train_images, 5)
-test_binned_5 = values_to_bins(test_images, 5)
-model_5 = MultinomialNB()
-model_5.fit(train_binned_5, train_labels)
-acuratete_5 = model_5.score(test_binned_5, test_labels)
-print("Acuratete cu num_binds = 5: %s" % acuratete_5)
-
-# ex 4 --->> test clasificatorul mutinomial naive bayes pe subsetul MNIST folosind num_binds 3 5 7 9 11
-
-bins_values = [3, 5, 7, 9, 11]
-acurateti = []
-best_binds = 0
+# ex 4 -->> test clasificator pe subset num_bins - 3 5 7 9 11
+valori_k = [3, 5, 7, 9, 11]
+best_interval = []
 best_acuratete = 0
 
-for bins in bins_values:
-    # discretizez
-    train_b = values_to_bins(train_images, bins)
-    test_b = values_to_bins(test_images, bins)
+for k in valori_k:
+    train_k = values_to_bins(train_images, k)
+    test_k = values_to_bins(test_images, k)
 
-    # antrenez si evaluez
-    mod = MultinomialNB()
-    mod.fit(train_b, train_labels)
-    acur = mod.score(test_b, test_labels)
-    acurateti.append(acur)
+    modelk = MultinomialNB()
+    modelk.fit(train_k, train_labels)
 
-    print(f"num_binds = {bins} are acuratetea {acur}")
+    acuratete_k = model.score(test_k, test_labels)
 
-    # cel mai bun bins
-    if acur > best_acuratete:
-        best_acuratete = acur
-        best_binds = bins
+    print(f"acuratete pt {k} -->> {acuratete_k}")
 
-print(f"Cel mai bun num_binds = {best_binds} cu acuratete {best_acuratete}")
+    if acuratete_k > best_acuratete:
+        best_acuratete = acuratete_k
+        best_interval = k
 
-# ex 5 --->> nr subintervale care obtine cea mai buna acuratete la 4, afisati cel putin 10 exemple misclasate
+# ex 5 -->> pt nr de subintervale cele mai bune -->> 10 exemple misclasate
+print(f"best interval: {best_interval} cu acuratetea {best_acuratete}")
 
-# antrenez modelul final cu best_bins
-train_best = values_to_bins(train_images, best_binds)
-test_best = values_to_bins(test_images, best_binds)
-model_best = MultinomialNB()
-model_best.fit(train_best, train_labels)
+# antrenez etc etc
+train_misclasate = values_to_bins(train_images, best_interval)
+test_misclasate = values_to_bins(test_images, best_interval)
 
-# predictii pe test
-predictii = model_best.predict(test_best)
+model_miscasate = MultinomialNB()
+model_miscasate.fit(train_misclasate, train_labels)
+
+# trebuie sa fac predictii pe test
+predictii = model.predict(test_misclasate)
 
 # trebuie sa gasesc indicii unde predictia este gresita --->>> adica predictii sa fie diferit de test_labels
 misclasate_indici = np.where(predictii != test_labels)[0]
-print(f"total misclasate: {len(misclasate_indici)} din {len(test_labels)}")
 
 # afisez primele 10 exemple misclasate
-fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+fig, axes = plt.subplots(5, 2, figsize=(15, 6))
 for indice, aux in enumerate(axes.flat):
     if indice < len(misclasate_indici):
         i = misclasate_indici[indice]
@@ -108,8 +89,9 @@ plt.suptitle("exemple misclasate")
 plt.tight_layout()
 plt.show()
 
-# ex 6 --->> confusion_matrix(y_true, y_pred) calculeaza matricea de confuzie
 
+# ex 6 -->> matricea de confuzie??? cu predictii clasificator
+# cum ar veni alea gresite
 def confusion_matrix(y_true, y_pred):
     # cate clase avem
     nr_clase = len(np.unique(y_true))
@@ -127,3 +109,6 @@ matrice_confuzie = confusion_matrix(test_labels, predictii)
 print("matricea de confuzie: ")
 print(matrice_confuzie)
 
+matrice2 = confusion_matrix(test_labels, predictii)
+print("cu scikit learn matricea:")
+print(matrice2)
