@@ -68,15 +68,11 @@ for i in range(len(test_images)):
     eticheta = knn.classify_image(test_imagine, num_neighbors=3, metric='l2')
     predictii.append(eticheta)
 
-    # afisez progresul
-    if (i + 1) % 100 == 0:
-        print(f"clasificate {i + 1} / {len(test_images)} imagini ...............")
-
 predictii = np.array(predictii)
 
 # calculam acuratetea
 acuratete = np.mean(predictii == test_labels)
-print(f"acuratetea cu 3-NN cu L2: {acuratete}")
+print(f"acuratetea cu 3NN cu L2: {acuratete}")
 
 # salvam predictiile in fisier
 np.savetxt('predictii_3nn_l2_mnist.txt', predictii)
@@ -99,7 +95,7 @@ for k in valori_k:
     predictii_k = np.array(predictii_k)
     acur = np.mean(predictii_k == test_labels)
     acurateti_l2.append(acur)
-    print(f"K = {k}, L2 ---->> acuratete = {acur}")
+    print(f"K = {k}  L2 ---->> acuratete = {acur}")
 
 # salvam acuratetile l2
 np.savetxt('acuratete_l2.txt', acurateti_l2)
@@ -128,7 +124,7 @@ for k in valori_k:
     predictii_k = np.array(predictii_k)
     acur = np.mean(predictii_k == test_labels)
     acurateti_l1.append(acur)
-    print(f"K = {k}, L1 ---->> acuratete = {acur}")
+    print(f"K = {k} L1 ---->> acuratete = {acur}")
 
 # luam acuratetile de la L2 din fisier
 acurateti_l2_fisier = np.loadtxt('acuratete_l2.txt')
